@@ -1,0 +1,19 @@
+- name: check that the k3s is already installed
+  stat:
+    path: /etc/rancher/k3s/k3s.yaml
+  register: k3s_config
+
+- name: download k3s installer
+  get_url:
+    url: "https://get.k3s.io"
+    dest: "/tmp/k3s.sh"
+    mode: "0755"
+  when: not k3s_config.stat.exists
+  register: k3s_installer_downloaded
+
+- name: install k3s from script
+  command: "/tmp/k3s.sh --tls-san {{ ip_master }}"
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+  when: not k3s_config.stat.exists and k3s_installer_downloaded.size > 0
+
